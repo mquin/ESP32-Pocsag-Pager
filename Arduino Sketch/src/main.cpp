@@ -193,7 +193,7 @@ void loop() {
 
             // print the received data
             Serial.print(F("[Pager] Address:\t")); // Print a message to the serial port
-            Serial.print(String(addr)); // Print the address
+            Serial.println(String(addr)); // Print the address
             Serial.print(F("[Pager] Data:\t")); // Print a message to the serial port
             Serial.println(str); // Print the data
 
