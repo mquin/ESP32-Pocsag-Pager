@@ -16,7 +16,7 @@ Frequency offset must be configured for reliable decoding. At present time, ther
 #include <RadioLib.h>
 #include <SPI.h>
 #include <Wire.h>
-#include <Wifi.h>
+//#include <Wifi.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 
@@ -160,11 +160,9 @@ void displayPage(String address, String text) { // Display the received message
     display.setTextSize(2); // Set the text size
     display.setTextColor(WHITE); // Set the text color
     display.setCursor(0, 0); // Set the cursor position
-    display.print("Received:"); // Print the text
-    display.setCursor(0, 16); // Set the cursor position
     display.print(address); // Print the address
     display.setTextSize(1); // Set the text size
-    display.setCursor(0, 32); // Set the cursor position
+    display.setCursor(0, 16); // Set the cursor position
     display.print(text); // Print the text
     display.display(); // Display the text
 }
