@@ -16,6 +16,7 @@ Frequency offset must be configured for reliable decoding. At present time, ther
 #include <RadioLib.h>
 #include <SPI.h>
 #include <Wire.h>
+#include <TimeLib.h>
 //#include <Wifi.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -87,13 +88,17 @@ const unsigned char displayLogo[] PROGMEM = {
         0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 }; // DAPNET logo 128x64px (1 bit per pixel)
 
-
 SX1278 radio = new Module(LORA_SS, LORA_DIO0, LORA_RST, LORA_DIO1); // Radio module instance
 // create Pager client instance using the FSK module
 PagerClient pager(&radio); // Pager client instance
 
 #define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // OLED display instance
+
+time_t requestSync()
+{
+  return 0;
+}
 
 void pocsagInit() {
     // initialize SX1278 with default settings
@@ -153,19 +158,53 @@ void setup() {
     displayInit(); // Initialize the display
     pocsagInit(); // Initialize the pager
     pocsagStartRx(); // Start receiving messages
+    setSyncProvider( requestSync);  //set function to call when time sync required
+}
+void printDigits(int digits){
+  // utility function for digital clock display: prints preceding colon and leading 0
+  display.print(":");
+  if(digits < 10) {
+    display.print('0');
+  }
+  display.print(digits);
+}
+
+void displayTime() { // Display the time
+    display.setTextSize(1); // Set the text size
+    display.setTextColor(WHITE, BLACK); // Set the text color
+    display.setCursor(0, 56); // Set the cursor position
+    if (timeStatus()!=timeSet) {
+        display.println(F("Time not set"));
+        return;
+    }
+    time_t t = now();
+    display.print(hour(t));
+    printDigits(minute(t));
+    printDigits(second(t));
+    display.print(F("Z ")); // UTC only for now
+    display.print(year(t));
+    display.print(F("-"));
+    display.print(month(t));
+    display.print(F("-"));
+    display.print(day(t));
+    display.print(F("    "));
+    display.display(); // Display the text
 }
 
 void displayPage(String address, String text) { // Display the received message
     display.clearDisplay(); // Clear the display
     display.setTextSize(2); // Set the text size
-    display.setTextColor(WHITE); // Set the text color
+    display.setTextColor(WHITE,BLACK); // Set the text color
     display.setCursor(0, 0); // Set the cursor position
     display.print(address); // Print the address
     display.setTextSize(1); // Set the text size
     display.setCursor(0, 16); // Set the cursor position
     display.print(text); // Print the text
     display.display(); // Display the text
+    displayTime();
 }
+
+
 
 void ringBuzzer(int ringToneChoice) {
     for (int i = 0; i < NOTENUMBER; i++) {
@@ -203,6 +242,18 @@ void loop() {
                     ringBuzzer(ric[i].ringtype); // Ring the buzzer
                 }
             }
+            // RIC 216 should give us the time in UTC
+            if (addr == 216) {
+                Serial.println(F("Got reference time, resetting clock"));
+                // YYYYMMDDHHMMSS260427190800
+                setTime(str.substring(20,22).toInt(),
+                        str.substring(22,24).toInt(),
+                        str.substring(24,26).toInt(),
+                        str.substring(18,20).toInt(),
+                        str.substring(16,18).toInt(),
+                        str.substring(14,16).toInt()
+                );
+            };
         } else {
             Serial.print(F("failed, code ")); // Report error
             Serial.println(state);  // Report error
