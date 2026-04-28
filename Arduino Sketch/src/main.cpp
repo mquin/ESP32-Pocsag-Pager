@@ -96,7 +96,7 @@ PagerClient pager(&radio); // Pager client instance
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // OLED display instance
 
 bool displayOn=false;
-int lastDisplay=0;
+time_t lastDisplay=0;
 
 time_t requestSync()
 {
@@ -233,10 +233,13 @@ void ringBuzzer(int ringToneChoice) {
 }
 
 void loop() {
-        if (displayOn && timeStatus()==timeSet && lastDisplay != 0 && now()-lastDisplay > displayTimeout) {
-                display.ssd1306_command(SSD1306_DISPLAYOFF);
-                displayOn=false;
-        }
+    if (displayOn && timeStatus()==timeSet && lastDisplay != 0 && now()-lastDisplay > displayTimeout) {
+            display.ssd1306_command(SSD1306_DISPLAYOFF);
+            displayOn=false;
+            Serial.print(F("Idle for ")); // Print a message to the serial port
+            Serial.print(String(now()-lastDisplay));
+            Serial.println(" seconds, turning display off");
+    }
     // the number of batches to wait for
     // 2 batches will usually be enough to fit short and medium messages
     if (pager.available() >= 2) {
@@ -263,9 +266,7 @@ void loop() {
             // RIC 216 should give us the time in UTC
             if (addr == 216) {
                 Serial.println(F("Got reference time, resetting clock"));
-                if (lastDisplay==0){
-                    lastDisplay=now()-displayTimeout; // we've probably been waiting a while, so just turn the display off
-                }
+
                 // YYYYMMDDHHMMSS260427190800
                 setTime(str.substring(20,22).toInt(),
                         str.substring(22,24).toInt(),
@@ -274,6 +275,9 @@ void loop() {
                         str.substring(16,18).toInt(),
                         str.substring(14,16).toInt()
                 );
+                if (lastDisplay==0){
+                    lastDisplay=now()-displayTimeout; // as we've probably been waiting a few minutes, just turn the display off
+                }
             };
         } else {
             Serial.print(F("failed, code ")); // Report error
