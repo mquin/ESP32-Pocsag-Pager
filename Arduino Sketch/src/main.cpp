@@ -240,6 +240,14 @@ void loop() {
             Serial.print(String(now()-lastDisplay));
             Serial.println(" seconds, turning display off");
     }
+    
+    if (!displayOn && timeStatus()==timeSet && touchRead(T2) < 50) {
+        Serial.println("T2 touched, turning display on");
+        display.ssd1306_command(SSD1306_DISPLAYON);
+        displayOn=true;
+        lastDisplay=now();
+    }
+
     // the number of batches to wait for
     // 2 batches will usually be enough to fit short and medium messages
     if (pager.available() >= 2) {
