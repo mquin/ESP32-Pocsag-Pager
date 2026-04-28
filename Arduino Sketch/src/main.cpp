@@ -178,6 +178,9 @@ void displayTime() { // Display the time
         return;
     }
     time_t t = now();
+    if(hour(t) < 10) {
+        display.print('0');
+    }
     display.print(hour(t));
     printDigits(minute(t));
     printDigits(second(t));
