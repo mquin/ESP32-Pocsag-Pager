@@ -95,6 +95,9 @@ PagerClient pager(&radio); // Pager client instance
 #define SCREEN_ADDRESS 0x3C  ///< See datasheet for Address; 0x3D for 128x64, 0x3C for 128x32
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RST); // OLED display instance
 
+bool displayOn=false;
+int lastDisplay=0;
+
 time_t requestSync()
 {
   return 0;
@@ -150,6 +153,7 @@ void displayInit() {
     display.clearDisplay();  // clears the screen and buffer
     display.drawBitmap(0, 0, displayLogo, 128, 64, WHITE); // Draw the logo
     display.display(); // Display the logo
+    displayOn=true;
 }
 
 void setup() {
@@ -195,6 +199,13 @@ void displayTime() { // Display the time
 }
 
 void displayPage(String address, String text) { // Display the received message
+    if (!displayOn) {
+        display.ssd1306_command(SSD1306_DISPLAYON);
+        displayOn=true;
+        if (timeStatus()==timeSet) {
+            lastDisplay=now();
+        }
+    }
     display.clearDisplay(); // Clear the display
     display.setTextSize(2); // Set the text size
     display.setTextColor(WHITE,BLACK); // Set the text color
@@ -222,6 +233,10 @@ void ringBuzzer(int ringToneChoice) {
 }
 
 void loop() {
+        if (displayOn && timeStatus()==timeSet && lastDisplay != 0 && now()-lastDisplay > displayTimeout) {
+                display.ssd1306_command(SSD1306_DISPLAYOFF);
+                displayOn=false;
+        }
     // the number of batches to wait for
     // 2 batches will usually be enough to fit short and medium messages
     if (pager.available() >= 2) {
@@ -248,6 +263,9 @@ void loop() {
             // RIC 216 should give us the time in UTC
             if (addr == 216) {
                 Serial.println(F("Got reference time, resetting clock"));
+                if (lastDisplay==0){
+                    lastDisplay=now()-displayTimeout; // we've probably been waiting a while, so just turn the display off
+                }
                 // YYYYMMDDHHMMSS260427190800
                 setTime(str.substring(20,22).toInt(),
                         str.substring(22,24).toInt(),

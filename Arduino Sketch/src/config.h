@@ -5,6 +5,8 @@ In the near future, bring this to a menu, and load-edit them in SPIFFS
 
 //Default settings
 
+int displayTimeout=300;
+
 extern float offset = 0.0044;  // device specific, in MHz. VHF: 0.0014 UHF: 0.0044
 extern float frequency = 439.98750;
 
