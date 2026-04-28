@@ -7,8 +7,8 @@ In the near future, bring this to a menu, and load-edit them in SPIFFS
 
 int displayTimeout=300;
 
-extern float offset = 0.0044;  // device specific, in MHz. VHF: 0.0014 UHF: 0.0044
-extern float frequency = 439.98750;
+float offset = 0.0044;  // device specific, in MHz. VHF: 0.0014 UHF: 0.0044
+float frequency = 439.98750;
 
 #define RICNUMBER 8 //Maximum number of RIC usable
 #define RINGTONE 4 //Number of ringtones available
@@ -32,9 +32,9 @@ struct ric{
 {RIC,"NAME",ringtone(see below),TBD,TBD}
 */
 ric[RICNUMBER]={
-        {65009, "IND",2,0,0},
-        {1040, "EMERGENCY",0,0,0},
-        {1080, "APRSWX",1,0,0},
+        {65009, (char *)"IND",2,0,0},
+        {1040, (char *)"EMERGENCY",0,0,0},
+        {1080, (char *)"APRSWX",1,0,0},
 };
 
 //"melodies", 130ms tones. Individual frequencies, 8 slots. 0 equals to a 130ms silence.
